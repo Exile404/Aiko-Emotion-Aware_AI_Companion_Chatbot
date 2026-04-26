@@ -7,3 +7,17 @@ tts_venv/
 voice_cache/
 voice_processed/
 voice_output/
+voice_refs/
+xtts_training_data
+xtts_finetune_output/
+Aiko_Voice/
+aiko_memory_db/
+
+aiko_test_2.wav
+aiko_test_1.wav
+aiko_test_0.wav
+xtts_finetune_output_v2/aiko_xtts_v2-April-26-2026_02+10PM-abb2f27/checkpoint_750.pth
+xtts_finetune_output_v2/aiko_xtts_v2-April-26-2026_02+10PM-abb2f27/checkpoint_1000.pth
+xtts_finetune_output_v2/aiko_xtts_v2-April-26-2026_02+10PM-abb2f27/checkpoint_1250.pth
+xtts_finetune_output_v2/aiko_xtts_v2-April-26-2026_02+10PM-abb2f27/checkpoint_1500.pth
+xtts_finetune_output_v2/aiko_xtts_v2-April-26-2026_02+10PM-abb2f27/trainer_0_log.txt
