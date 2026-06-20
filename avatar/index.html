@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Aiko Avatar</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #10121a; overflow: hidden; }
+  #status { position: fixed; top: 8px; left: 8px; font: 12px/1.4 monospace; color: #9aa3b2; z-index: 10; white-space: pre; }
+  canvas { display: block; }
+</style>
+<!-- Cubism 4 core: required for .model3.json models -->
+<script src="https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js"></script>
+<!-- Cubism 2 core: required for legacy .model.json models -->
+<script src="https://cdn.jsdelivr.net/gh/dylanNew/live2d/webgl/Live2D/lib/live2d.min.js"></script>
+<!-- PIXI v6 (pixi-live2d-display 0.4 needs v6, not v7/v8) -->
+<script src="https://cdn.jsdelivr.net/npm/pixi.js@6.5.2/dist/browser/pixi.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pixi-live2d-display@0.4.0/dist/index.min.js"></script>
+</head>
+<body>
+<div id="status">loading…</div>
+<canvas id="canvas"></canvas>
+<script src="app.js?v=2"></script>
+</body>
+</html>
