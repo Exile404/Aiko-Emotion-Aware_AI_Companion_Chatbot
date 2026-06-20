@@ -44,3 +44,4 @@ xtts_v3_listen.py
 # Notebook backups
 *.bak
 aiko_notebook_clean.*.bak.ipynb
+aiko_dataset_final.toon
