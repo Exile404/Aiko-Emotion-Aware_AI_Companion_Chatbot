@@ -4,21 +4,27 @@
 Table C1-7 established that emotion2vec scores 86.50 balanced accuracy on CREMA-D and
 30.83 on MELD. That is a 55.67-point gap across a comparison in which EVERY variable
 moves at once, so it licenses no claim about cause. IEMOCAP resolves it because it is
-acoustically clean like CREMA-D but spontaneous and conversational like MELD, and because
+acoustically clean like CREMA-D but conversational like MELD, and because
 it contains scripted and improvised dialogue from the same actors in the same sessions.
 
 The ladder this script builds:
 
     CREMA-D          acted, isolated utterance, studio clean, 12 fixed sentences
     IEMOCAP script   acted from a play script, conversational, studio clean, open vocab
-    IEMOCAP impro    SPONTANEOUS, conversational, studio clean, open vocab
-    MELD             spontaneous, conversational, acoustically degraded TV audio
+    IEMOCAP impro    actor-improvised, conversational, studio clean, open vocab
+    MELD             scripted TV performance, multi-party, broadcast audio
 
-Consecutive rungs differ in roughly one property each, so the deltas are attributable.
-The script-against-impro rung is the only one that is a WITHIN-corpus, within-speaker,
-within-recording-chain contrast, which is why it carries the causal weight: it varies
-spontaneity and nothing else, and it is tested with paired statistics rather than as a
-difference of two independent point estimates.
+The cross-corpus rungs differ in many properties at once (corpus, annotation, audio,
+structure), so their deltas are NOT attributable to any one of them; the controlled
+evidence on what drives them lives in noise_results.md and clean_spontaneity_results.md.
+The script-against-impro rung is the only WITHIN-corpus, within-speaker,
+within-recording-chain contrast, tested with paired statistics.
+
+READ FIRST: every number in this file comes from the deployed encoders, both of which
+saw these corpora in training. Two of the interpretations an earlier version drew here
+(a recording-condition modality inversion; a null spontaneity effect) did not survive the
+contamination-free replication in clean_probe_eval.py / clean_spontaneity_check.py, and
+the generated prose now says so where each table appears.
 
 THREE comparison traps this script exists to avoid.
 
@@ -329,17 +335,17 @@ def main() -> None:
     report.append(fmt("## Table C1-11 - Gap decomposition (balanced accuracy)", steps,
                       ["Step", "from", "to", "delta", "property varied"]))
     report.append("\nThe first two steps share IEMOCAP script as their anchor, which is "
-                  "acted and conversational exactly as MELD is, so they hold the "
-                  "acted/improvised axis fixed and their deltas sum to the total gap. "
-                  "Step 1 adds dialogue context and open vocabulary while holding acting "
-                  "and recording quality fixed. Step 2 adds in-the-wild acoustic "
-                  "degradation while holding both acting and conversational structure "
-                  "fixed. Step 3 is the only controlled contrast on the ladder, varying "
-                  "spontaneity alone within one corpus, one set of actors and one "
-                  "recording chain; it is reported as a branch rather than a rung "
-                  "because MELD is scripted television performance and so does not "
-                  "extend the spontaneity axis. Steps 1 and 2 remain cross-corpus and "
-                  "are bounded above by whatever else differs between those corpora.\n")
+                  "scripted and conversational as MELD is, so their deltas sum to the "
+                  "total gap. Step 1 adds dialogue context and open vocabulary. Step 2 "
+                  "changes recording conditions, but also corpus, annotation procedure and "
+                  "multi-party structure, and must NOT be read as an acoustic effect: "
+                  "realistic noise at MELD-matched speech-recognition difficulty does not "
+                  "reproduce it (noise_results.md, Table N-5), and under contamination-free "
+                  "encoders text falls as far as voice across this step "
+                  "(clean_spontaneity_results.md, Table S-5), which audio cannot explain. "
+                  "Step 3 is the only within-corpus contrast; under this deployed encoder "
+                  "it is null, but see the caveat under Table C1-13. Steps 1 and 2 are "
+                  "cross-corpus and absorb everything else that differs between corpora.\n")
 
     # ---- Table C1-12: the controlled contrast, with paired statistics ---------------
     gs, ps = voice_eval(script, COMMON4)
@@ -393,6 +399,17 @@ def main() -> None:
                       f"emotion prior differs between the conditions. Script minus impro "
                       f"balanced accuracy = {md:+.2f} points, 95 % CI [{mlo:+.2f}, "
                       f"{mhi:+.2f}] under the same dialogue-clustered bootstrap.\n")
+        report.append("**Caveat: this null is a property of the deployed encoder, not of "
+                      "speech.** emotion2vec+ saw IEMOCAP labels in training (via EmoBox). "
+                      "Under a contamination-free encoder (frozen WavLM with a probe trained "
+                      "leave-one-session-out) improvised speech is 12 to 14 points EASIER "
+                      "for voice than scripted speech, surviving the same paired-cell and "
+                      "duration-and-emotion-matched controls used here "
+                      "(clean_probe_results.md K-4; clean_spontaneity_results.md S-1, S-2). "
+                      "Probing emotion2vec+'s own embeddings with that same protocol is "
+                      "still null (e2v_probe_results.md, E-3), so the flattening lives in "
+                      "the encoder's representation, not its classification head. Do not "
+                      "report the null above as a finding about spontaneity.\n")
 
     # ---- Table C1-14: C1's own question on a third corpus ---------------------------
     vrows = []
@@ -418,8 +435,10 @@ def main() -> None:
         report.append(f"\nOracle ceiling (either modality correct): "
                       f"{100 * np.mean(orc):.2f} % accuracy on {len(orc)} utterances. "
                       f"Transcripts are the corpus's own, so the text pathway is "
-                      f"evaluated under conditions more favourable than deployment, "
-                      f"which makes any voice-modality deficit conservative.\n")
+                      f"evaluated under conditions more favourable than deployment. Note "
+                      f"also that the DistilRoBERTa text model was trained on MELD but not "
+                      f"on IEMOCAP, so its weakness here and its strength on MELD partly "
+                      f"reflect which corpus it has seen.\n")
 
     # ---- Table C1-15: the modality inversion (the C1 headline) ---------------------
     def vt(rows):
@@ -449,27 +468,29 @@ def main() -> None:
                     f"{mv['bal_acc'] - mt['bal_acc']:+.2f}",
                     f"{mv['macro']:.2f}", f"{mt['macro']:.2f}", f"{orc:.2f}"])
     if len(inv) == 2:
-        report.append(fmt("## Table C1-15 - The modality ranking inverts with recording "
-                          "conditions", inv,
+        report.append(fmt("## Table C1-15 - Voice against text across corpora, deployed "
+                          "encoders (does not survive contamination-free replication)", inv,
                           ["Corpus", "n", "voice bal acc", "text bal acc",
                            "voice - text", "voice macro F1", "text macro F1",
                            "oracle acc"]))
         swing = float(inv[0][4]) - float(inv[1][4])
         report.append(f"\nIdentical label space, identical argmax restriction, identical "
-                      f"deployed encoders. The sign of the voice-minus-text margin "
-                      f"reverses between the two corpora, a swing of {swing:.2f} points. "
-                      f"The C1 null reported on MELD is therefore a property of MELD's "
-                      f"recording conditions, not of the voice modality or of the "
-                      f"encoder. Two consequences follow. First, a fusion rule tuned on "
-                      f"one acoustic regime does not transfer to the other, and the "
-                      f"deployed heuristic's text-leading bias (short-utterance voice "
-                      f"down-weighting, per-emotion text reliability) is calibrated for "
-                      f"the regime a close-microphone companion does NOT operate in. "
-                      f"Second, single-corpus evaluation of either modality is "
-                      f"systematically optimistic in opposite directions: acted corpora "
-                      f"flatter voice, and scripted television flatters text, because "
-                      f"its dialogue is written to be lexically explicit about emotion "
-                      f"where spontaneous conversational speech is not.\n")
+                      f"deployed encoders. Under these encoders the sign of the "
+                      f"voice-minus-text margin reverses between the corpora, a swing of "
+                      f"{swing:.2f} points. **This is not a finding about the modalities.** "
+                      f"Both deployed encoders have seen these corpora in training: "
+                      f"emotion2vec+ saw IEMOCAP, MELD and CREMA-D through EmoBox, and the "
+                      f"DistilRoBERTa text model was trained on MELD but not IEMOCAP, which "
+                      f"favours voice on IEMOCAP and text on MELD exactly as the table "
+                      f"shows. With contamination-free encoders the margins are +13.05 on "
+                      f"IEMOCAP and +0.03 on MELD (clean_probe_results.md, K-3): voice's "
+                      f"advantage vanishes on MELD but text does not overtake it, and the "
+                      f"swing shrinks by about three quarters. The defensible pattern is "
+                      f"in clean_spontaneity_results.md, Table S-4: voice beats text only "
+                      f"in improvised speech, and the two tie for scripted speech in both "
+                      f"the studio (IEMOCAP scripted) and on television (MELD). That the "
+                      f"deployed text-leading heuristic is miscalibrated is measured "
+                      f"directly in fusion_transfer_results.md (F-1, F-2).\n")
 
     # ---- Table C1-16: is the cross-corpus collapse just utterance brevity? ---------
     brev = []
@@ -494,9 +515,9 @@ def main() -> None:
                       f"step 2 and is tested directly: restricting IEMOCAP to its short "
                       f"utterances costs "
                       f"{float(brev[1][2]) - float(brev[0][2]):.2f} balanced-accuracy "
-                      f"points, which is a small fraction of step 2. The collapse "
-                      f"survives the control and is not an artifact of utterance "
-                      f"length.\n")
+                      f"points, which is a small fraction of step 2. For the deployed "
+                      f"encoder, step 2 is therefore not an artifact of utterance length. "
+                      f"This does not make it acoustic: see the note under Table C1-11.\n")
 
     # ---- per-class, IEMOCAP voice ---------------------------------------------------
     if gv:
@@ -519,9 +540,13 @@ def main() -> None:
         report.append(f"\n{tot} utterances labelled `fru` in IEMOCAP, the corpus's second "
                       f"largest category, have no counterpart among the deployed seven "
                       f"classes and are excluded from every accuracy table above. This "
-                      f"row shows where the encoder puts them instead. Excluding the "
-                      f"corpus's hardest category flatters IEMOCAP, so the degradation "
-                      f"reported in Table C1-11 is a lower bound.\n")
+                      f"row shows where the encoder puts them instead: almost evenly "
+                      f"across four classes, so the encoder has no representation of "
+                      f"frustration. If frustrated speech is harder than the retained "
+                      f"classes, as that spread suggests, excluding it flatters IEMOCAP. "
+                      f"That makes the CREMA-D-to-IEMOCAP step in Table C1-11 conservative "
+                      f"but the IEMOCAP-to-MELD step an OVERestimate, not a lower bound as "
+                      f"an earlier version of this file stated.\n")
 
     # ---- excited-merge sensitivity ---------------------------------------------------
     no_exc = [r for r in iemo if not r.get("merged_exc")]
@@ -551,12 +576,21 @@ def main() -> None:
                       ["kind", "n cached", "n common-four", "mean dur s", "median dur s",
                        "mean words"]))
 
-    header = ("# C1 boundary condition, part 2: decomposing the clean-to-wild collapse "
-              "with IEMOCAP\n\n"
-              "emotion2vec_plus_large, voice modality only. IEMOCAP is acoustically clean "
-              "like CREMA-D but spontaneous and conversational like MELD, and it contains "
-              "both scripted and improvised dialogue from the same ten actors, so it "
-              "separates recording quality from spontaneity instead of confounding them.\n\n")
+    header = ("# C1 boundary condition, part 2: the voice encoder across corpora, with "
+              "IEMOCAP\n\n"
+              "> **Read first.** Every number below uses the DEPLOYED encoders "
+              "(emotion2vec+ for voice, DistilRoBERTa for text), and both saw these "
+              "corpora in training: emotion2vec+ via EmoBox (IEMOCAP, MELD, CREMA-D), "
+              "DistilRoBERTa via MELD. The numbers are correct as measurements of the "
+              "deployed system, but two interpretations an earlier version of this file "
+              "drew from them did not survive contamination-free replication: the "
+              "voice/text ranking does not invert with recording conditions, and "
+              "spontaneity is not null. See clean_probe_results.md, "
+              "clean_spontaneity_results.md, noise_results.md and "
+              "fusion_transfer_results.md for what holds.\n\n"
+              "emotion2vec_plus_large unless stated. IEMOCAP is studio-recorded and "
+              "conversational and contains both scripted and actor-improvised dialogue "
+              "from the same ten actors.\n\n")
     with open(args.out, "w", encoding="utf-8") as f:
         f.write(header + "\n".join(report) + "\n")
     print("\n".join(report))

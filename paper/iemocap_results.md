@@ -1,6 +1,8 @@
-# C1 boundary condition, part 2: decomposing the clean-to-wild collapse with IEMOCAP
+# C1 boundary condition, part 2: the voice encoder across corpora, with IEMOCAP
 
-emotion2vec_plus_large, voice modality only. IEMOCAP is acoustically clean like CREMA-D but spontaneous and conversational like MELD, and it contains both scripted and improvised dialogue from the same ten actors, so it separates recording quality from spontaneity instead of confounding them.
+> **Read first.** Every number below uses the DEPLOYED encoders (emotion2vec+ for voice, DistilRoBERTa for text), and both saw these corpora in training: emotion2vec+ via EmoBox (IEMOCAP, MELD, CREMA-D), DistilRoBERTa via MELD. The numbers are correct as measurements of the deployed system, but two interpretations an earlier version of this file drew from them did not survive contamination-free replication: the voice/text ranking does not invert with recording conditions, and spontaneity is not null. See clean_probe_results.md, clean_spontaneity_results.md, noise_results.md and fusion_transfer_results.md for what holds.
+
+emotion2vec_plus_large unless stated. IEMOCAP is studio-recorded and conversational and contains both scripted and actor-improvised dialogue from the same ten actors.
 
 ## Table C1-10 - Voice encoder across the cleanliness/spontaneity ladder (common four classes)
 
@@ -23,7 +25,7 @@ All rows: emotion2vec_plus_large, voice modality only, argmax restricted to angr
 | IEMOCAP script -> IEMOCAP impro | 82.23 | 83.63 | +1.40  | acted -> improvised        |
 | TOTAL CREMA-D -> MELD test      | 93.28 | 46.25 | -47.02 | sum of the first two       |
 
-The first two steps share IEMOCAP script as their anchor, which is acted and conversational exactly as MELD is, so they hold the acted/improvised axis fixed and their deltas sum to the total gap. Step 1 adds dialogue context and open vocabulary while holding acting and recording quality fixed. Step 2 adds in-the-wild acoustic degradation while holding both acting and conversational structure fixed. Step 3 is the only controlled contrast on the ladder, varying spontaneity alone within one corpus, one set of actors and one recording chain; it is reported as a branch rather than a rung because MELD is scripted television performance and so does not extend the spontaneity axis. Steps 1 and 2 remain cross-corpus and are bounded above by whatever else differs between those corpora.
+The first two steps share IEMOCAP script as their anchor, which is scripted and conversational as MELD is, so their deltas sum to the total gap. Step 1 adds dialogue context and open vocabulary. Step 2 changes recording conditions, but also corpus, annotation procedure and multi-party structure, and must NOT be read as an acoustic effect: realistic noise at MELD-matched speech-recognition difficulty does not reproduce it (noise_results.md, Table N-5), and under contamination-free encoders text falls as far as voice across this step (clean_spontaneity_results.md, Table S-5), which audio cannot explain. Step 3 is the only within-corpus contrast; under this deployed encoder it is null, but see the caveat under Table C1-13. Steps 1 and 2 are cross-corpus and absorb everything else that differs between corpora.
 
 ## Table C1-12 - Spontaneity as a within-corpus contrast
 
@@ -45,6 +47,8 @@ The first two steps share IEMOCAP script as their anchor, which is acted and con
 
 duration quartile edges (s): 2.32, 3.58, 5.77. Cells are matched to equal counts in every (quartile x emotion) combination, so neither utterance length nor emotion prior differs between the conditions. Script minus impro balanced accuracy = -1.04 points, 95 % CI [-5.07, +3.37] under the same dialogue-clustered bootstrap.
 
+**Caveat: this null is a property of the deployed encoder, not of speech.** emotion2vec+ saw IEMOCAP labels in training (via EmoBox). Under a contamination-free encoder (frozen WavLM with a probe trained leave-one-session-out) improvised speech is 12 to 14 points EASIER for voice than scripted speech, surviving the same paired-cell and duration-and-emotion-matched controls used here (clean_probe_results.md K-4; clean_spontaneity_results.md S-1, S-2). Probing emotion2vec+'s own embeddings with that same protocol is still null (e2v_probe_results.md, E-3), so the flattening lives in the encoder's representation, not its classification head. Do not report the null above as a finding about spontaneity.
+
 ## Table C1-14 - Voice against text on IEMOCAP (common four)
 
 | Method                                      | n    | acc   | bal acc | WF1   | macro F1 |
@@ -52,16 +56,16 @@ duration quartile edges (s): 2.32, 3.58, 5.77. Cells are matched to equal counts
 | Voice only (emotion2vec)                    | 5502 | 82.75 | 83.84   | 82.52 | 83.18    |
 | Text only (DistilRoBERTa, gold transcripts) | 5502 | 41.20 | 38.70   | 37.71 | 36.83    |
 
-Oracle ceiling (either modality correct): 91.35 % accuracy on 5502 utterances. Transcripts are the corpus's own, so the text pathway is evaluated under conditions more favourable than deployment, which makes any voice-modality deficit conservative.
+Oracle ceiling (either modality correct): 91.35 % accuracy on 5502 utterances. Transcripts are the corpus's own, so the text pathway is evaluated under conditions more favourable than deployment. Note also that the DistilRoBERTa text model was trained on MELD but not on IEMOCAP, so its weakness here and its strength on MELD partly reflect which corpus it has seen.
 
-## Table C1-15 - The modality ranking inverts with recording conditions
+## Table C1-15 - Voice against text across corpora, deployed encoders (does not survive contamination-free replication)
 
 | Corpus                          | n    | voice bal acc | text bal acc | voice - text | voice macro F1 | text macro F1 | oracle acc |
 |---------------------------------|------|---------------|--------------|--------------|----------------|---------------|------------|
 | IEMOCAP (clean, conversational) | 5502 | 83.84         | 38.70        | +45.14       | 83.18          | 36.83         | 91.35      |
 | MELD test (degraded TV audio)   | 2211 | 46.25         | 51.85        | -5.59        | 44.44          | 51.60         | 78.20      |
 
-Identical label space, identical argmax restriction, identical deployed encoders. The sign of the voice-minus-text margin reverses between the two corpora, a swing of 50.73 points. The C1 null reported on MELD is therefore a property of MELD's recording conditions, not of the voice modality or of the encoder. Two consequences follow. First, a fusion rule tuned on one acoustic regime does not transfer to the other, and the deployed heuristic's text-leading bias (short-utterance voice down-weighting, per-emotion text reliability) is calibrated for the regime a close-microphone companion does NOT operate in. Second, single-corpus evaluation of either modality is systematically optimistic in opposite directions: acted corpora flatter voice, and scripted television flatters text, because its dialogue is written to be lexically explicit about emotion where spontaneous conversational speech is not.
+Identical label space, identical argmax restriction, identical deployed encoders. Under these encoders the sign of the voice-minus-text margin reverses between the corpora, a swing of 50.73 points. **This is not a finding about the modalities.** Both deployed encoders have seen these corpora in training: emotion2vec+ saw IEMOCAP, MELD and CREMA-D through EmoBox, and the DistilRoBERTa text model was trained on MELD but not IEMOCAP, which favours voice on IEMOCAP and text on MELD exactly as the table shows. With contamination-free encoders the margins are +13.05 on IEMOCAP and +0.03 on MELD (clean_probe_results.md, K-3): voice's advantage vanishes on MELD but text does not overtake it, and the swing shrinks by about three quarters. The defensible pattern is in clean_spontaneity_results.md, Table S-4: voice beats text only in improvised speech, and the two tie for scripted speech in both the studio (IEMOCAP scripted) and on television (MELD). That the deployed text-leading heuristic is miscalibrated is measured directly in fusion_transfer_results.md (F-1, F-2).
 
 ## Table C1-16 - Brevity control on step 2
 
@@ -70,7 +74,7 @@ Identical label space, identical argmax restriction, identical deployed encoders
 | IEMOCAP, <= 5 words | 1826 | 80.85   | 79.20    |
 | IEMOCAP, > 5 words  | 3705 | 85.37   | 85.09    |
 
-MELD's utterances are shorter than IEMOCAP's (mean 8.34 against 11.49 words; 26.2 % against 19.5 % at three words or fewer), and short utterances are already known to hurt the voice modality. Brevity is therefore an alternative explanation for step 2 and is tested directly: restricting IEMOCAP to its short utterances costs 4.52 balanced-accuracy points, which is a small fraction of step 2. The collapse survives the control and is not an artifact of utterance length.
+MELD's utterances are shorter than IEMOCAP's (mean 8.34 against 11.49 words; 26.2 % against 19.5 % at three words or fewer), and short utterances are already known to hurt the voice modality. Brevity is therefore an alternative explanation for step 2 and is tested directly: restricting IEMOCAP to its short utterances costs 4.52 balanced-accuracy points, which is a small fraction of step 2. For the deployed encoder, step 2 is therefore not an artifact of utterance length. This does not make it acoustic: see the note under Table C1-11.
 
 ## Per-class F1 - IEMOCAP, voice only, common four
 
@@ -100,7 +104,7 @@ weighted avg      0.847     0.828     0.825      5502
 | disgusted    | 3   | 0.2  |
 | fearful      | 2   | 0.1  |
 
-1849 utterances labelled `fru` in IEMOCAP, the corpus's second largest category, have no counterpart among the deployed seven classes and are excluded from every accuracy table above. This row shows where the encoder puts them instead. Excluding the corpus's hardest category flatters IEMOCAP, so the degradation reported in Table C1-11 is a lower bound.
+1849 utterances labelled `fru` in IEMOCAP, the corpus's second largest category, have no counterpart among the deployed seven classes and are excluded from every accuracy table above. This row shows where the encoder puts them instead: almost evenly across four classes, so the encoder has no representation of frustration. If frustrated speech is harder than the retained classes, as that spread suggests, excluding it flatters IEMOCAP. That makes the CREMA-D-to-IEMOCAP step in Table C1-11 conservative but the IEMOCAP-to-MELD step an OVERestimate, not a lower bound as an earlier version of this file stated.
 
 ## Sensitivity - the excited-into-happy merge
 

@@ -5,16 +5,17 @@ Why IEMOCAP, and why it is the decisive corpus for the C1 boundary condition:
 
 CREMA-D against MELD is a TWO-point comparison and it confounds every variable at once.
 CREMA-D is acted, isolated, studio-clean, and built on twelve fixed carrier sentences;
-MELD is spontaneous, conversational, acoustically degraded, and open vocabulary. The
+MELD is scripted TV performance, multi-party, broadcast audio, and open vocabulary. The
 55.67-point balanced-accuracy gap between them therefore cannot be attributed to any one
 cause, and the paper can only say "in-the-wild conditions" as an undifferentiated blob.
 
 IEMOCAP sits precisely in the middle: studio-recorded with head-mounted microphones, so
-acoustically clean like CREMA-D, but spontaneous dyadic conversation, like MELD. That
+acoustically clean like CREMA-D, but conversational, like MELD. That
 splits the blob in two:
 
     CREMA-D -> IEMOCAP   varies spontaneity and dialogue context, recording held clean
-    IEMOCAP -> MELD      varies recording conditions, conversational nature held constant
+    IEMOCAP -> MELD      varies recording conditions, but also corpus, annotation and
+                         structure; see noise_results.md before attributing it to audio
 
 Better still, IEMOCAP contains BOTH improvised and scripted dialogues from the same ten
 actors in the same sessions through the same recording chain. Script against impro varies
@@ -29,9 +30,10 @@ FIVE label traps this script exists to handle.
 2. `fru` (frustrated) has no counterpart in the deployed seven-class scheme. It is the
    second largest category, 1,849 utterances. It is RETAINED in the cache with
    gold=null so it is available as a diagnostic (where does the encoder put frustration?)
-   but it cannot enter any accuracy table. Dropping 1,849 of the corpus's hardest
-   utterances flatters IEMOCAP, which biases the comparison AGAINST a degradation
-   finding and so makes that finding conservative.
+   but it cannot enter any accuracy table. If frustrated speech is harder than the
+   retained classes, dropping it flatters IEMOCAP: conservative for a CREMA-D-to-IEMOCAP
+   drop, but it ENLARGES an IEMOCAP-to-MELD drop. (An earlier version of this note had
+   the second direction backwards.)
 3. `exc` (excited) is conventionally merged into happy, and the deployed scheme has no
    excited category, so the merge is forced if those 1,041 utterances are kept. The merge
    is recorded per row (`merged_exc`) so iemocap_eval.py can report it both ways rather

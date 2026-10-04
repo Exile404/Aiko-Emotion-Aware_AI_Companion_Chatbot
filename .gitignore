@@ -71,3 +71,9 @@ PH1_C1_COURSEMAP_v1.docx
 # signed USC licence and MELD transcripts are copyrighted script dialogue. The committed
 # caches carry derived scores and n_words only.
 paper/.text_backup/
+
+# Frozen-encoder feature caches for the contamination-free baseline (binary, regenerable)
+paper/clean_feats/
+
+# Noise-degradation caches: contain ASR transcripts of licensed corpora. Never commit.
+paper/noise_cache/
