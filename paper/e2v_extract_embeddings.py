@@ -37,7 +37,7 @@ import soundfile as sf
 
 from clean_extract_features import manifest
 
-GROUPS = ["iemocap_all", "meld_train", "meld_dev", "meld_test"]
+GROUPS = ["iemocap_all", "meld_train", "meld_dev", "meld_test", "crema_all"]
 FEATS = "paper/clean_feats"
 PARTS = f"{FEATS}/e2v_parts"
 PART = 500                       # small parts keep the funasr leak far from the RAM ceiling

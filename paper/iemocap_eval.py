@@ -408,8 +408,12 @@ def main() -> None:
                       "(clean_probe_results.md K-4; clean_spontaneity_results.md S-1, S-2). "
                       "Probing emotion2vec+'s own embeddings with that same protocol is "
                       "still null (e2v_probe_results.md, E-3), so the flattening lives in "
-                      "the encoder's representation, not its classification head. Do not "
-                      "report the null above as a finding about spontaneity.\n")
+                      "the encoder's representation, not its classification head. On EARS, "
+                      "a corpus released after emotion2vec+, the encoder still shows about "
+                      "half of this bias against spontaneous speech (ears_results.md, Z-3), "
+                      "so the flattening is partly a general bias toward read, acted speech "
+                      "and only partly attributable to contamination. Do not report the null "
+                      "above as a finding about spontaneity.\n")
 
     # ---- Table C1-14: C1's own question on a third corpus ---------------------------
     vrows = []
