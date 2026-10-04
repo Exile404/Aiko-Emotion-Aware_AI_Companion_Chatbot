@@ -45,3 +45,29 @@ xtts_v3_listen.py
 *.bak
 aiko_notebook_clean.*.bak.ipynb
 aiko_dataset_final.toon
+
+# Paper experiments (raw data + extracted-audio cache + run logs; scripts stay tracked)
+data/
+paper/meld_wavs/
+paper/*.err
+paper/*.out
+
+
+# Extracted-audio caches: the earlier rule only covered the test split, but the train
+# and dev extractions are 11,096 wavs / 1.1 GB. All are regenerable from data/.
+paper/meld_wavs_train/
+paper/meld_wavs_dev/
+paper/crema_wavs_16k/
+
+# IEMOCAP: 17 GB tarball plus a 29 GB extracted tree, both at repo root
+IEMOCAP_full_release.tar.gz
+IEMOCAP_full_release/
+
+# Personal files that happen to live in this directory, unrelated to the project
+Interview-Prep-Complete.pdf
+PH1_C1_COURSEMAP_v1.docx
+
+# Local backup of score caches WITH raw corpus transcripts. Never commit: IEMOCAP needs a
+# signed USC licence and MELD transcripts are copyrighted script dialogue. The committed
+# caches carry derived scores and n_words only.
+paper/.text_backup/
